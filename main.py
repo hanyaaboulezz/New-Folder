@@ -55,26 +55,26 @@ db = firestore.client()
 
 
 
+def loadmodel():
+    model = tf.keras.models.load_model('C:\\Users\\user\\RPW_model0.h5')
 
-
-def audio_prediction(filename):
+def audio_prediction(model,filename):
     audio, sample_rate = librosa.load(filename, res_type='kaiser_fast')
     mfccs_features = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
     mfccs_scaled_features = np.mean(mfccs_features.T, axis=0)
     mfccs_scaled_features = mfccs_scaled_features.reshape(1, -1)
     labelencoder = LabelEncoder()
-    model = tf.keras.models.load_model('C:\\Users\\user\\RPW_model0.h5')
     x_predict = model.predict(mfccs_scaled_features)
     predicted_label = np.argmax(x_predict, axis=1)
     print(predicted_label)
     return str(predicted_label)
 
-def doAll(treeid):
+def doAll(model, treeid):
     path_on_cloud = treeid
 
-    storage.child(path_on_cloud).download("C:\\Users\\user\\New folder\\", path_on_cloud)
+    storage.child(path_on_cloud).download("C:\\Users\\user\\New folder",path_on_cloud+".wav")
 
-    if (audio_prediction("C:\\Users\\user\\New folder\\"+path_on_cloud)== "[0]"):
+    if (audio_prediction(model,"C:\\Users\\user\\New folder\\"+path_on_cloud+".wav")== "[0]"):
         audio_class = "RPW"
         print(audio_class)
         db.collection('tree').document(treeid).update({"Infected": True})
@@ -86,21 +86,30 @@ def doAll(treeid):
 
 
 @app.route('/', methods =['GET', 'POST'])
-def nameRoute():
+def namerout():
     global response
-
     if(request.method == 'POST'):
+        
+        if request.data is None or request.data == "":
+             return jsonify({"error": "no file"})
+        
         request_data = request.data
         request_data = json.loads(request_data)
         name = request_data['farm']
+        model = tf.keras.models.load_model('RPW_model0.h5')
+        doAll(model,"3minfeeding-13")
+        print('done')
         for i in range(len(name)):
-            print(name[i])
-            doAll(name[i])
-        response = f'hi'
-        return ""
+            try:
+                print(name[i])
+                doAll(model, name[i])
+            except Exception as e:
+                return jsonify({"error": str(e)})     
+        response = 'done'
+        return response
     else:
-        return jsonify({'farm': response})
-    
+        return ""
+    #jsonify({'farm': response})
 
 if __name__ == "__main__":
     app.run(debug=True)
