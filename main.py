@@ -85,7 +85,7 @@ def doAll(treeid):
         db.collection('tree').document(treeid).update({"Infected": False})    
 
 
-@app.route('/farm', methods =['GET', 'POST'])
+@app.route('/', methods =['GET', 'POST'])
 def nameRoute():
     global response
 
@@ -93,11 +93,10 @@ def nameRoute():
         request_data = request.data
         request_data = json.loads(request_data)
         name = request_data['farm']
-        response = f'hi'
         for i in range(len(name)):
             print(name[i])
             doAll(name[i])
-
+        response = f'hi'
         return ""
     else:
         return jsonify({'farm': response})
