@@ -97,8 +97,6 @@ def namerout():
         request_data = json.loads(request_data)
         name = request_data['farm']
         model = tf.keras.models.load_model('RPW_model0.h5')
-        doAll(model,"3minfeeding-13")
-        print('done')
         for i in range(len(name)):
             try:
                 print(name[i])
